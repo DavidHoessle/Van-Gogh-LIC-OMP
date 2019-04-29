@@ -10,3 +10,4 @@
 # The real files
 !Makefile.am
 !van-gogh-lic.c
+!van-gogh-licOMP.c
