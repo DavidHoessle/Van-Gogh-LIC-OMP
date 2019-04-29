@@ -1,0 +1,7 @@
+# Ignore all
+*
+
+# Don't ignore those
+!.gitignore
+!Makefile.am
+!van-gogh-lic.c
