@@ -1,0 +1,12 @@
+# Ignore all
+*
+
+# Don't ignore those
+# Standard git stuff
+!.gitignore
+!.README.md
+!LICENSE
+
+# The real files
+!Makefile.am
+!van-gogh-lic.c
