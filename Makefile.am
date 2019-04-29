@@ -188,6 +188,7 @@ libexec_PROGRAMS = \
 	value-invert \
 	value-propagate \
 	van-gogh-lic \
+	van-gogh-licOMP \
 	video \
 	warp \
 	waves \
@@ -2612,6 +2613,26 @@ van_gogh_lic_LDADD = \
 	$(RT_LIBS)		\
 	$(INTLLIBS)		\
 	$(van_gogh_lic_RC)
+
+van_gogh_licOMP_SOURCES = \
+	van_gogh_licOMP.c
+
+van_gogh_licOMP_LDADD = \
+	$(libgimpui)		\
+	$(libgimpwidgets)	\
+	$(libgimpmodule)	\
+	$(libgimp)		\
+	$(libgimpmath)		\
+	$(libgimpconfig)	\
+	$(libgimpcolor)		\
+	$(libgimpbase)		\
+	$(GTK_LIBS)		\
+	$(RT_LIBS)		\
+	$(INTLLIBS)		\
+	$(oilify_RC)
+
+van_gogh_licOMP_CFLAGS = -fopenmp
+van_gogh_licOMP_LDFLAGS = -fopenmp
 
 video_SOURCES = \
 	video.c
