@@ -42,6 +42,8 @@
 
 #include "libgimp/stdplugins-intl.h"
 
+#include <time.h>
+
 
 /************/
 /* Typedefs */
@@ -485,11 +487,22 @@ rgb_to_hsl (GimpDrawable     *drawable,
 }
 
 
+// NOTE: this is the main function to be executed.
 static void
 compute_lic (GimpDrawable *drawable,
              const guchar *scalarfield,
              gboolean      rotate)
 {
+
+  /**********/
+  /* Timing */
+  /**********/
+  clock_t startTime, endTime;
+  double timeTaken;
+
+  startTime = clock();
+
+
   gint xcount, ycount;
   GimpRGB color;
   gdouble vx, vy, tmp;
@@ -553,6 +566,15 @@ compute_lic (GimpDrawable *drawable,
       gimp_progress_update ((gfloat) ycount / (gfloat) src_rgn.h);
     }
   gimp_progress_update (1.0);
+
+  /**********/
+  /* Timing */
+  /**********/
+  endTime = clock();
+
+  timeTaken = (((double) (endTime - startTime)) / CLOCKS_PER_SEC) * 1000; // time in ms;
+  printf("Time taken: %dms", timeTaken);
+
 }
 
 static void
