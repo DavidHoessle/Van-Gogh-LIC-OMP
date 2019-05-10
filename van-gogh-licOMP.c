@@ -290,6 +290,7 @@ filter (gdouble u)
 /* Compute the Line Integral Convolution (LIC) at x,y */
 /******************************************************/
 
+// OMP
 static gdouble
 lic_noise (gint    x,
            gint    y,
@@ -298,9 +299,10 @@ lic_noise (gint    x,
 {
   gdouble i = 0.0;
   gdouble f1 = 0.0, f2 = 0.0;
-  gdouble u, step = 2.0 * l / isteps;
+  gdouble step = 2.0 * l / isteps;
   gdouble xx = (gdouble) x, yy = (gdouble) y;
-  gdouble c, s;
+  gdouble c, s, u;
+  int counter = 0;
 
   /* Get vector at x,y */
   /* ================= */
@@ -313,12 +315,22 @@ lic_noise (gint    x,
 
   f1 = filter (-l) * noise (xx + l * c , yy + l * s);
 
-  for (u = -l + step; u <= l; u += step)
-    {
-      f2 = filter (u) * noise ( xx - u * c , yy - u * s);
-      i += (f1 + f2) * 0.5 * step;
-      f1 = f2;
-    }
+  # pragma omp parallel for private(counter, u, f1, f2) reduction(+:i)
+    for (counter = 0; counter < (int)(((2 * l) / step) + 1); counter++)
+      {
+        u = -l + (step * counter); // calculate u in the iteration (e.q. while-loop)
+
+        f2 = filter (u) * noise ( xx - u * c , yy - u * s);
+
+        // originally f1 was equal to f2 of the previouse iteration.
+        // to make it independent of other threads (iterations) it will be calculated in every iteration.
+        if (u == -1)
+          f1 = f2;
+        else
+          f1 = filter (u - step) * noise (xx - (u -step) * c , yy - (u - step) * s);
+
+        i += (f1 + f2) * 0.5 * step;
+      }
 
   i = (i - minv) / (maxv - minv);
 
