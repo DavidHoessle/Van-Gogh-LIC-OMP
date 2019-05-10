@@ -228,6 +228,7 @@ omega (gdouble u,
 /* The noise function (2D variant of Perlins noise function) */
 /*************************************************************/
 
+// OMP
 static gdouble
 noise (gdouble x,
        gdouble y)
@@ -240,11 +241,17 @@ noise (gdouble x,
   /* Calculate the gdouble sum */
   /* ======================== */
 
-  for (i = sti; i <= sti + 1; i++)
-    for (j = stj; j <= stj + 1; j++)
-      sum += omega ((x - (gdouble) i * dx) / dx,
-                    (y - (gdouble) j * dy) / dy,
-                    i, j);
+  // # pragma omp parallel for shared(sum)
+  # pragma omp parallel for collapse(2) private(value) reduction(+:sum) 
+    for (i = sti; i <= sti + 1; i++)
+      for (j = stj; j <= stj + 1; j++) {
+        gdouble value = omega((x - (gdouble) i * dx) / dx,
+                              (y - (gdouble) j * dy) / dy,
+                              i, j);
+        // #pragma omp atomic
+        sum += value;
+      }
+        
 
   return sum;
 }
