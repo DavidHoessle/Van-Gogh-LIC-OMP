@@ -488,6 +488,7 @@ rgb_to_hsl (GimpDrawable     *drawable,
 }
 
 
+// OMP
 static void
 compute_lic (GimpDrawable *drawable,
              const guchar *scalarfield,
@@ -508,53 +509,54 @@ compute_lic (GimpDrawable *drawable,
                        border_x2 - border_x1,
                        border_y2 - border_y1, TRUE, TRUE);
 
-  for (ycount = 0; ycount < src_rgn.h; ycount++)
-    {
-      for (xcount = 0; xcount < src_rgn.w; xcount++)
-        {
-          /* Get derivative at (x,y) and normalize it */
-          /* ============================================================== */
+  #pragma omp parallel for private(ycount, xcount, vx, vy, tmp) collapse(2)
+    for (ycount = 0; ycount < src_rgn.h; ycount++)
+      {
+        for (xcount = 0; xcount < src_rgn.w; xcount++)
+          {
+            /* Get derivative at (x,y) and normalize it */
+            /* ============================================================== */
 
-          vx = gradx (scalarfield, xcount, ycount);
-          vy = grady (scalarfield, xcount, ycount);
+            vx = gradx (scalarfield, xcount, ycount);
+            vy = grady (scalarfield, xcount, ycount);
 
-          /* Rotate if needed */
-          if (rotate)
-            {
-              tmp = vy;
-              vy = -vx;
-              vx = tmp;
-            }
+            /* Rotate if needed */
+            if (rotate)
+              {
+                tmp = vy;
+                vy = -vx;
+                vx = tmp;
+              }
 
-          tmp = sqrt (vx * vx + vy * vy);
-          if (tmp >= 0.000001)
-            {
-              tmp = 1.0 / tmp;
-              vx *= tmp;
-              vy *= tmp;
-            }
+            tmp = sqrt (vx * vx + vy * vy);
+            if (tmp >= 0.000001)
+              {
+                tmp = 1.0 / tmp;
+                vx *= tmp;
+                vy *= tmp;
+              }
 
-          /* Convolve with the LIC at (x,y) */
-          /* ============================== */
+            /* Convolve with the LIC at (x,y) */
+            /* ============================== */
 
-          if (licvals.effect_convolve == 0)
-            {
-              peek (&src_rgn, xcount, ycount, &color);
-              tmp = lic_noise (xcount, ycount, vx, vy);
-              if (source_drw_has_alpha)
-                gimp_rgba_multiply (&color, tmp);
-              else
-                gimp_rgb_multiply (&color, tmp);
-            }
-          else
-            {
-              lic_image (&src_rgn, xcount, ycount, vx, vy, &color);
-            }
-          poke (&dest_rgn, xcount, ycount, &color);
-        }
+            if (licvals.effect_convolve == 0)
+              {
+                peek (&src_rgn, xcount, ycount, &color);
+                tmp = lic_noise (xcount, ycount, vx, vy);
+                if (source_drw_has_alpha)
+                  gimp_rgba_multiply (&color, tmp);
+                else
+                  gimp_rgb_multiply (&color, tmp);
+              }
+            else
+              {
+                lic_image (&src_rgn, xcount, ycount, vx, vy, &color);
+              }
+            poke (&dest_rgn, xcount, ycount, &color);
+          }
 
-      gimp_progress_update ((gfloat) ycount / (gfloat) src_rgn.h);
-    }
+        gimp_progress_update ((gfloat) ycount / (gfloat) src_rgn.h);
+      }
   gimp_progress_update (1.0);
 }
 
