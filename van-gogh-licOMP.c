@@ -42,6 +42,9 @@
 
 #include "libgimp/stdplugins-intl.h"
 
+// OMP
+#include <omp.h>
+
 
 /************/
 /* Typedefs */
