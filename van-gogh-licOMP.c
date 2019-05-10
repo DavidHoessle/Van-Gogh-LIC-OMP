@@ -369,6 +369,7 @@ getpixel (GimpPixelRgn *src_rgn,
     *p = gimp_bilinear_rgb (u, v, pp);
 }
 
+// OMP
 static void
 lic_image (GimpPixelRgn *src_rgn,
            gint          x,
@@ -398,6 +399,7 @@ lic_image (GimpPixelRgn *src_rgn,
   else
     gimp_rgb_multiply (&col1, filter (-l));
 
+  // TODO: #pragma omp parallel ...
   for (u = -l + step; u <= l; u += step)
     {
       getpixel (src_rgn, &col2, xx - u * c, yy - u * s);
