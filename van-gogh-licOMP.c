@@ -233,6 +233,14 @@ static gdouble
 noise (gdouble x,
        gdouble y)
 {
+  /**********/
+  /* Timing */
+  /**********/
+  gfloat noise_time_start, noise_time_stop;
+#ifdef _OPENMP
+      noise_time_start = omp_get_wtime();
+#endif
+
   gint i, sti = (gint) floor (x / dx);
   gint j, stj = (gint) floor (y / dy);
 
@@ -254,6 +262,16 @@ noise (gdouble x,
         sum += value;
       }
         
+  /**************/
+  /* End Timing */
+  /**************/
+
+#ifdef _OPENMP
+  noise_time_stop = omp_get_wtime();
+  gfloat timeTaken = noise_time_stop - noise_time_start;
+
+  printf ("Parallel Whole Time (noise): %f\n", timeTaken);
+#endif
 
   return sum;
 }
