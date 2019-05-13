@@ -56,7 +56,7 @@
 #define PLUG_IN_PROC   "plug-in-licOMP"
 #define PLUG_IN_BINARY "van-gogh-licOMP"
 #define PLUG_IN_ROLE   "gimp-van-gogh-licOMP"
-#define PARALL_FUNCTIONS ""
+#define PARALL_FUNCTIONS "compute_lic"
 
 typedef enum
 {
