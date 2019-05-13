@@ -43,14 +43,11 @@
 #include "libgimp/stdplugins-intl.h"
 
 #include <omp.h>
-#include <stdio.h>
-
+#include <string.h>
 
 /************/
 /* Typedefs */
 /************/
-
-#define _OPENMP
 
 #define numx    40              /* Pseudo-random vector grid size */
 #define numy    40
@@ -505,7 +502,6 @@ compute_lic (GimpDrawable *drawable,
       par_start = omp_get_wtime();
 #endif
 
-
   gint xcount, ycount;
   GimpRGB color;
   gdouble vx, vy, tmp;
@@ -573,13 +569,12 @@ compute_lic (GimpDrawable *drawable,
   /**************/
   /* End Timing */
   /**************/
+
 #ifdef _OPENMP
-  par_start = omp_get_wtime();
+  par_stop = omp_get_wtime();
   gfloat timeTaken = par_stop - par_start;
 
-  FILE *timingFile = fopen("/home/rsns01/stud/it/dahoit04/unix/gimp-2.8.22-OpenMP/COMPILE/logs/timings.log", "a+");
-  fprintf(timingFile, "Basic van-gogh-plugin: Time taken: %f ms\n", timeTaken);
-  printf ("Parallel Whole Time:%f\n",timeTaken);
+  printf ("Parallel Whole Time (ifdef):%f\n",timeTaken);
 #endif
 
 }
