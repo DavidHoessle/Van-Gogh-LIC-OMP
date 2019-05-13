@@ -2629,7 +2629,7 @@ van_gogh_licOMP_LDADD = \
 	$(GTK_LIBS)		\
 	$(RT_LIBS)		\
 	$(INTLLIBS)		\
-	$(oilify_RC)
+	$(van_gogh_lic_RC)
 
 van_gogh_licOMP_CFLAGS = -fopenmp
 van_gogh_licOMP_LDFLAGS = -fopenmp
