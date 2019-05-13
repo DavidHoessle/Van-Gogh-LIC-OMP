@@ -43,6 +43,7 @@
 #include "libgimp/stdplugins-intl.h"
 
 #include <time.h>
+#include <stdio.h>
 
 
 /************/
@@ -573,7 +574,9 @@ compute_lic (GimpDrawable *drawable,
   endTime = clock();
 
   timeTaken = (((double) (endTime - startTime)) / CLOCKS_PER_SEC) * 1000; // time in ms;
-  printf("Time taken: %dms", timeTaken);
+
+  FILE *timingFile = fopen("/home/rsns01/stud/it/dahoit04/unix/gimp-2.8.22-OpenMP/COMPILE/logs/timings.log", "a+");
+  fprintf(timingFile, "Basic van-gogh-plugin: Time taken: %dms", timeTaken);
 
 }
 
