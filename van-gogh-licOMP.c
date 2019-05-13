@@ -56,7 +56,7 @@
 #define PLUG_IN_PROC   "plug-in-licOMP"
 #define PLUG_IN_BINARY "van-gogh-licOMP"
 #define PLUG_IN_ROLE   "gimp-van-gogh-licOMP"
-#define PARALL_FUNCTIONS ""
+#define PARALL_FUNCTIONS "generatevectors"
 
 typedef enum
 {
@@ -499,14 +499,6 @@ compute_lic (GimpDrawable *drawable,
              const guchar *scalarfield,
              gboolean      rotate)
 {
-  /**********/
-  /* Timing */
-  /**********/
-  gfloat par_start, par_stop;
-#ifdef _OPENMP
-      par_start = omp_get_wtime();
-#endif
-
   gint xcount, ycount;
   GimpRGB color;
   gdouble vx, vy, tmp;
@@ -570,17 +562,6 @@ compute_lic (GimpDrawable *drawable,
       gimp_progress_update ((gfloat) ycount / (gfloat) src_rgn.h);
     }
   gimp_progress_update (1.0);
-           
-  /**************/
-  /* End Timing */
-  /**************/
-
-#ifdef _OPENMP
-  par_stop = omp_get_wtime();
-  gfloat timeTaken = par_stop - par_start;
-
-  printf ("Parallel Whole Time (generatevectors): %f\n", timeTaken);
-#endif
 }
 
 static void
