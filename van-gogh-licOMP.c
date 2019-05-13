@@ -578,7 +578,7 @@ compute_lic (GimpDrawable *drawable,
   par_stop = omp_get_wtime();
   gfloat timeTaken = par_stop - par_start;
 
-  printf ("Parallel Whole Time: %f\n", timeTaken);
+  printf ("Parallel Whole Time (generatevectors): %f\n", timeTaken);
 #endif
 }
 
