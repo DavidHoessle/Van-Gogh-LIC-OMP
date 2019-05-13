@@ -561,11 +561,11 @@ compute_lic (GimpDrawable *drawable,
             else
               {
                 printf("call lic_image\n");
-                lic_image (&src_rgn, xcount, ycount, vx, vy, &color);
+                lic_image (&src_rgn, xcount, ycount, vx, vy, &color); // problem
               }
 
             printf("poking\n");
-            poke (&dest_rgn, xcount, ycount, &color);
+            poke (&dest_rgn, xcount, ycount, &color); // problem
             
           }
         //#pragma omp master  
