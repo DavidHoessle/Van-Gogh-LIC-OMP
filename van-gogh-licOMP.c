@@ -510,7 +510,7 @@ compute_lic (GimpDrawable *drawable,
                        border_x2 - border_x1,
                        border_y2 - border_y1, TRUE, TRUE);
 
-  #pragma omp parallel for private(ycount, xcount, vx, vy, tmp) collapse(2)
+  #pragma omp parallel for num_threads(2) private(ycount, xcount, vx, vy, tmp) //collapse(2)
     for (ycount = 0; ycount < src_rgn.h; ycount++)
       {
         for (xcount = 0; xcount < src_rgn.w; xcount++)
@@ -524,6 +524,7 @@ compute_lic (GimpDrawable *drawable,
             /* Rotate if needed */
             if (rotate)
               {
+                printf("rotate needed\n");
                 tmp = vy;
                 vy = -vx;
                 vx = tmp;
@@ -532,6 +533,7 @@ compute_lic (GimpDrawable *drawable,
             tmp = sqrt (vx * vx + vy * vy);
             if (tmp >= 0.000001)
               {
+                printf("tmp min\n");
                 tmp = 1.0 / tmp;
                 vx *= tmp;
                 vy *= tmp;
@@ -542,23 +544,34 @@ compute_lic (GimpDrawable *drawable,
 
             if (licvals.effect_convolve == 0)
               {
+                printf("convolve == 0\n");
                 peek (&src_rgn, xcount, ycount, &color);
                 tmp = lic_noise (xcount, ycount, vx, vy);
                 if (source_drw_has_alpha)
-                  gimp_rgba_multiply (&color, tmp);
+                  {
+                    printf("has alpha\n");
+                    gimp_rgba_multiply (&color, tmp);
+                  }
                 else
-                  gimp_rgb_multiply (&color, tmp);
+                  {
+                    printf("no alpha\n");
+                    gimp_rgb_multiply (&color, tmp);
+                  }
               }
             else
               {
+                printf("call lic_image\n");
                 lic_image (&src_rgn, xcount, ycount, vx, vy, &color);
               }
-            poke (&dest_rgn, xcount, ycount, &color);
-          }
 
-        gimp_progress_update ((gfloat) ycount / (gfloat) src_rgn.h);
+            printf("poking\n");
+            poke (&dest_rgn, xcount, ycount, &color);
+            
+          }
+        //#pragma omp master  
+          gimp_progress_update ((gfloat) ycount / (gfloat) src_rgn.h);
       }
-  gimp_progress_update (1.0);
+  //gimp_progress_update (1.0);
 }
 
 static void
