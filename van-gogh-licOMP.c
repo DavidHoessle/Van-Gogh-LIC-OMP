@@ -233,14 +233,6 @@ static gdouble
 noise (gdouble x,
        gdouble y)
 {
-  /**********/
-  /* Timing */
-  /**********/
-  gfloat noise_time_start, noise_time_stop;
-#ifdef _OPENMP
-      noise_time_start = omp_get_wtime();
-#endif
-
   gint i, sti = (gint) floor (x / dx);
   gint j, stj = (gint) floor (y / dy);
 
@@ -261,17 +253,6 @@ noise (gdouble x,
         // #pragma omp atomic
         sum += value;
       }
-        
-  /**************/
-  /* End Timing */
-  /**************/
-
-#ifdef _OPENMP
-  noise_time_stop = omp_get_wtime();
-  gfloat timeTaken = noise_time_stop - noise_time_start;
-
-  printf ("Parallel Whole Time (noise): %f\n", timeTaken);
-#endif
 
   return sum;
 }
@@ -520,6 +501,14 @@ compute_lic (GimpDrawable *drawable,
              const guchar *scalarfield,
              gboolean      rotate)
 {
+  /**********/
+  /* Timing */
+  /**********/
+  gfloat par_start, par_stop;
+#ifdef _OPENMP
+      par_start = omp_get_wtime();
+#endif
+
   gint xcount, ycount;
   GimpRGB color;
   gdouble vx, vy, tmp;
@@ -583,6 +572,17 @@ compute_lic (GimpDrawable *drawable,
       gimp_progress_update ((gfloat) ycount / (gfloat) src_rgn.h);
     }
   gimp_progress_update (1.0);
+           
+  /**************/
+  /* End Timing */
+  /**************/
+
+#ifdef _OPENMP
+  par_stop = omp_get_wtime();
+  gfloat timeTaken = par_stop - par_start;
+
+  printf ("Parallel Whole Time: %f\n", timeTaken);
+#endif
 }
 
 static void
