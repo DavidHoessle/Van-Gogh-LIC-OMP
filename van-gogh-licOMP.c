@@ -42,13 +42,15 @@
 
 #include "libgimp/stdplugins-intl.h"
 
-#include <time.h>
+#include <omp.h>
 #include <stdio.h>
 
 
 /************/
 /* Typedefs */
 /************/
+
+#define _OPENMP
 
 #define numx    40              /* Pseudo-random vector grid size */
 #define numy    40
@@ -498,10 +500,10 @@ compute_lic (GimpDrawable *drawable,
   /**********/
   /* Timing */
   /**********/
-  clock_t startTime, endTime;
-  double timeTaken;
-
-  startTime = clock();
+  gfloat par_start, par_stop;
+#ifdef _OPENMP
+      par_start = omp_get_wtime();
+#endif
 
 
   gint xcount, ycount;
@@ -568,15 +570,13 @@ compute_lic (GimpDrawable *drawable,
     }
   gimp_progress_update (1.0);
 
-  /**********/
-  /* Timing */
-  /**********/
-  endTime = clock();
-
-  timeTaken = (((double) (endTime - startTime)) / CLOCKS_PER_SEC) * 1000; // time in ms;
-
-  FILE *timingFile = fopen("/home/rsns01/stud/it/dahoit04/unix/gimp-2.8.22-OpenMP/COMPILE/logs/timings.log", "a+");
-  fprintf(timingFile, "Basic van-gogh-plugin: Time taken: %dms", timeTaken);
+  /**************/
+  /* End Timing */
+  /**************/
+#ifdef _OPENMP
+  par_start = omp_get_wtime();
+  printf ("Parallel Whole Time:%f\n",par_stop-par_start);
+#endif
 
 }
 
