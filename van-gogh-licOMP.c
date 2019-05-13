@@ -575,7 +575,11 @@ compute_lic (GimpDrawable *drawable,
   /**************/
 #ifdef _OPENMP
   par_start = omp_get_wtime();
-  printf ("Parallel Whole Time:%f\n",par_stop-par_start);
+  gfloat timeTaken = par_stop - par_start;
+
+  FILE *timingFile = fopen("/home/rsns01/stud/it/dahoit04/unix/gimp-2.8.22-OpenMP/COMPILE/logs/timings.log", "a+");
+  fprintf(timingFile, "Basic van-gogh-plugin: Time taken: %f ms\n", timeTaken);
+  printf ("Parallel Whole Time:%f\n",timeTaken);
 #endif
 
 }
