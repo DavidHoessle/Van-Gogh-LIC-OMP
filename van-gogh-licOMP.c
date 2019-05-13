@@ -502,15 +502,6 @@ compute_lic (GimpDrawable *drawable,
              const guchar *scalarfield,
              gboolean      rotate)
 {
-  /**********/
-  /* Timing */
-  /**********/
-#ifdef _OPENMP
-      gfloat par_start, par_stop;
-      printf ("Started timing %s", PARALL_FUNCTIONS);
-      par_start = omp_get_wtime();
-#endif
-
   gint xcount, ycount;
   GimpRGB color;
   gdouble vx, vy, tmp;
@@ -574,22 +565,20 @@ compute_lic (GimpDrawable *drawable,
       gimp_progress_update ((gfloat) ycount / (gfloat) src_rgn.h);
     }
   gimp_progress_update (1.0);
-           
-  /**************/
-  /* End Timing */
-  /**************/
-
-#ifdef _OPENMP
-  par_stop = omp_get_wtime();
-  gfloat timeTaken = par_stop - par_start;
-
-  printf ("Parallel Whole Time (%s): %f\n", PARALL_FUNCTIONS, timeTaken);
-#endif
 }
 
 static void
 compute_image (GimpDrawable *drawable)
 {
+  /**********/
+  /* Timing */
+  /**********/
+#ifdef _OPENMP
+      gfloat par_start, par_stop;
+      printf ("Started timing %s", PARALL_FUNCTIONS);
+      par_start = omp_get_wtime();
+#endif
+
   GimpDrawable *effect;
   guchar       *scalarfield = NULL;
 
@@ -645,6 +634,17 @@ compute_image (GimpDrawable *drawable)
                         border_x2 - border_x1, border_y2 - border_y1);
 
   gimp_displays_flush ();
+
+  /**************/
+  /* End Timing */
+  /**************/
+
+#ifdef _OPENMP
+  par_stop = omp_get_wtime();
+  gfloat timeTaken = par_stop - par_start;
+
+  printf ("Parallel Whole Time (%s): %f\n", PARALL_FUNCTIONS, timeTaken);
+#endif
 }
 
 /**************************/
