@@ -56,6 +56,7 @@
 #define PLUG_IN_PROC   "plug-in-licOMP"
 #define PLUG_IN_BINARY "van-gogh-licOMP"
 #define PLUG_IN_ROLE   "gimp-van-gogh-licOMP"
+#define PARALL_FUNCTIONS "noise"
 
 typedef enum
 {
@@ -504,8 +505,9 @@ compute_lic (GimpDrawable *drawable,
   /**********/
   /* Timing */
   /**********/
-  gfloat par_start, par_stop;
 #ifdef _OPENMP
+      gfloat par_start, par_stop;
+      printf ("Started timing %s", PARALL_FUNCTIONS);
       par_start = omp_get_wtime();
 #endif
 
@@ -581,7 +583,7 @@ compute_lic (GimpDrawable *drawable,
   par_stop = omp_get_wtime();
   gfloat timeTaken = par_stop - par_start;
 
-  printf ("Parallel Whole Time (noise): %f\n", timeTaken);
+  printf ("Parallel Whole Time (%s): %f\n", PARALL_FUNCTIONS, timeTaken);
 #endif
 }
 
