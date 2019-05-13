@@ -241,11 +241,13 @@ noise (gdouble x,
   /* Calculate the gdouble sum */
   /* ======================== */
 
+  gdouble value;
+
   // # pragma omp parallel for shared(sum)
   # pragma omp parallel for collapse(2) private(value) reduction(+:sum) 
     for (i = sti; i <= sti + 1; i++)
       for (j = stj; j <= stj + 1; j++) {
-        gdouble value = omega((x - (gdouble) i * dx) / dx,
+        value = omega((x - (gdouble) i * dx) / dx,
                               (y - (gdouble) j * dy) / dy,
                               i, j);
         // #pragma omp atomic
