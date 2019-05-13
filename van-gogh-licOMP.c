@@ -55,7 +55,7 @@
 #define numx    40              /* Pseudo-random vector grid size */
 #define numy    40
 
-#define PLUG_IN_PROC   "plug-in-lic"
+#define PLUG_IN_PROC   "plug-in-licOMP"
 #define PLUG_IN_BINARY "van-gogh-licOMP"
 #define PLUG_IN_ROLE   "gimp-van-gogh-licOMP"
 
@@ -666,7 +666,7 @@ create_main_dialog (void)
 
   gimp_ui_init (PLUG_IN_BINARY, TRUE);
 
-  dialog = gimp_dialog_new (_("Van Gogh (LIC)"), PLUG_IN_ROLE,
+  dialog = gimp_dialog_new (_("Van Gogh (LIC) OMP"), PLUG_IN_ROLE,
                             NULL, 0,
                             gimp_standard_help_func, PLUG_IN_PROC,
 
@@ -840,7 +840,7 @@ query (void)
                           "Tom Bech & Federico Mena Quintero",
                           "Tom Bech & Federico Mena Quintero",
                           "Version 0.14, September 24 1997",
-                          N_("_Van Gogh (LIC)..."),
+                          N_("_Van Gogh (LIC) OMP..."),
                           "RGB*",
                           GIMP_PLUGIN,
                           G_N_ELEMENTS (args), 0,
