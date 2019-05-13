@@ -56,6 +56,7 @@
 #define PLUG_IN_PROC   "plug-in-licOMP"
 #define PLUG_IN_BINARY "van-gogh-licOMP"
 #define PLUG_IN_ROLE   "gimp-van-gogh-licOMP"
+#define PARALL_FUNCTIONS ""
 
 typedef enum
 {
@@ -563,6 +564,15 @@ compute_lic (GimpDrawable *drawable,
 static void
 compute_image (GimpDrawable *drawable)
 {
+  /**********/
+  /* Timing */
+  /**********/
+#ifdef _OPENMP
+      gfloat par_start, par_stop;
+      printf ("Started timing %s", PARALL_FUNCTIONS);
+      par_start = omp_get_wtime();
+#endif
+
   GimpDrawable *effect;
   guchar       *scalarfield = NULL;
 
@@ -618,6 +628,17 @@ compute_image (GimpDrawable *drawable)
                         border_x2 - border_x1, border_y2 - border_y1);
 
   gimp_displays_flush ();
+
+  /**************/
+  /* End Timing */
+  /**************/
+
+#ifdef _OPENMP
+  par_stop = omp_get_wtime();
+  gfloat timeTaken = par_stop - par_start;
+
+  printf ("Parallel Whole Time (%s): %f\n", PARALL_FUNCTIONS, timeTaken);
+#endif
 }
 
 /**************************/
