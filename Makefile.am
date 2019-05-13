@@ -2615,7 +2615,7 @@ van_gogh_lic_LDADD = \
 	$(van_gogh_lic_RC)
 
 van_gogh_licOMP_SOURCES = \
-	van_gogh_licOMP.c
+	van-gogh-licOMP.c
 
 van_gogh_licOMP_LDADD = \
 	$(libgimpui)		\
