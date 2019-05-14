@@ -264,11 +264,15 @@ generatevectors (void)
 
   gr = g_rand_new();
 
-  #pragma omp parallel for private(i, j, alpha) shared(G) collapse(2)
+  int tid;
+
+  #pragma omp parallel for num_threads(8) private(i, j, alpha) shared(G) collapse(2)
   for (i = 0; i < numx; i++)
     {
       for (j = 0; j < numy; j++)
         {
+          //tid = omp_get_thread_num();
+          //printf("generatevectors (%d)\n", tid);
           // init gr in every thread so that g_rand_double_range is threadsafe!?
           // gr = g_rand_new();
 
@@ -586,7 +590,7 @@ compute_image (GimpDrawable *drawable)
 
   gimp_progress_init (_("Van Gogh (LIC)"));
 
-  if (licvals.effect_convolve == 0)
+  //if (licvals.effect_convolve == 0)
     generatevectors ();
 
   if (licvals.filtlen < 0.1)
