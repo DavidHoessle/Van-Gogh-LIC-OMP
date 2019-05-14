@@ -495,10 +495,12 @@ compute_lic (GimpDrawable *drawable,
              const guchar *scalarfield,
              gboolean      rotate)
 {
+  printf("\ncall compute_lic\n");
   gint xcount, ycount;
   GimpRGB color;
   gdouble vx, vy, tmp;
   GimpPixelRgn src_rgn, dest_rgn;
+  GimpPixelRgn src_rgn2, dest_rgn2; // duplicate rgn's
 
   gimp_pixel_rgn_init (&src_rgn, drawable,
                        border_x1, border_y1,
@@ -510,11 +512,30 @@ compute_lic (GimpDrawable *drawable,
                        border_x2 - border_x1,
                        border_y2 - border_y1, TRUE, TRUE);
 
-  #pragma omp parallel for num_threads(2) private(ycount, xcount, vx, vy, tmp) //collapse(2)
+  // duplicate rgn's
+  gimp_pixel_rgn_init (&src_rgn2, drawable,
+                       border_x1, border_y1,
+                       border_x2 - border_x1,
+                       border_y2 - border_y1, FALSE, FALSE);
+
+  gimp_pixel_rgn_init (&dest_rgn2, drawable,
+                       border_x1, border_y1,
+                       border_x2 - border_x1,
+                       border_y2 - border_y1, TRUE, TRUE);
+
+
+  int tid;
+
+
+  #pragma omp parallel for num_threads(1) private(ycount, xcount, vx, vy, tmp, tid) //collapse(2)
     for (ycount = 0; ycount < src_rgn.h; ycount++)
       {
         for (xcount = 0; xcount < src_rgn.w; xcount++)
           {
+
+            // get thread id
+            tid = omp_get_thread_num();
+
             /* Get derivative at (x,y) and normalize it */
             /* ============================================================== */
 
@@ -524,7 +545,6 @@ compute_lic (GimpDrawable *drawable,
             /* Rotate if needed */
             if (rotate)
               {
-                printf("rotate needed\n");
                 tmp = vy;
                 vy = -vx;
                 vx = tmp;
@@ -533,7 +553,6 @@ compute_lic (GimpDrawable *drawable,
             tmp = sqrt (vx * vx + vy * vy);
             if (tmp >= 0.000001)
               {
-                printf("tmp min\n");
                 tmp = 1.0 / tmp;
                 vx *= tmp;
                 vy *= tmp;
@@ -542,31 +561,38 @@ compute_lic (GimpDrawable *drawable,
             /* Convolve with the LIC at (x,y) */
             /* ============================== */
 
+            printf("(x,y): (%d,%d)\n", xcount, ycount);
+
             if (licvals.effect_convolve == 0)
               {
-                printf("convolve == 0\n");
                 peek (&src_rgn, xcount, ycount, &color);
                 tmp = lic_noise (xcount, ycount, vx, vy);
                 if (source_drw_has_alpha)
                   {
-                    printf("has alpha\n");
                     gimp_rgba_multiply (&color, tmp);
                   }
                 else
                   {
-                    printf("no alpha\n");
                     gimp_rgb_multiply (&color, tmp);
                   }
               }
             else
               {
-                printf("call lic_image\n");
-                lic_image (&src_rgn, xcount, ycount, vx, vy, &color); // problem
+                printf("call lic_image(%d)\n", tid);
+                # pragma omp critical
+                  if (tid == 0)
+                    lic_image (&src_rgn, xcount, ycount, vx, vy, &color); // problem
+                  else
+                    lic_image (&src_rgn2, xcount, ycount, vx, vy, &color); // problem
               }
 
-            printf("poking\n");
-            poke (&dest_rgn, xcount, ycount, &color); // problem
-            
+            printf("poking(%d)\n", tid);
+            #pragma omp critical
+              if (tid == 0)
+                  poke (&dest_rgn, xcount, ycount, &color); // problem
+              else
+                  poke (&dest_rgn2, xcount, ycount, &color); // problem
+
           }
         //#pragma omp master  
           gimp_progress_update ((gfloat) ycount / (gfloat) src_rgn.h);
