@@ -514,9 +514,9 @@ progress = 0;
 max_progress = src_rgn.h * src_rgn.w;
 
 #pragma omp parallel num_threads(licvals.num_threads) default(none) \
-      private(ycount, xcount, vx, vy, tmp, thread_id, progress, color) \
+      private(ycount, xcount, vx, vy, tmp, thread_id, color) \
       reduction(+:progress) \
-      shared(src_rgn, licvals, drawable, dest_rgn, preview, max_progress, scalarfield, source_drw_has_alpha, rotate)
+      shared(src_rgn, licvals, drawable, dest_rgn, max_progress, scalarfield, source_drw_has_alpha, rotate)
   {
 
 #pragma omp for
