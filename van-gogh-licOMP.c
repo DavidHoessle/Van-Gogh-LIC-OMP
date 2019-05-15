@@ -58,6 +58,10 @@
 #define PLUG_IN_ROLE   "gimp-van-gogh-licOMP"
 #define PARALL_FUNCTIONS "compute_lic"
 
+// PROTOTYPE
+static void change(GtkAdjustment *, gpointer);
+
+
 typedef enum
 {
   LIC_HUE,
@@ -495,7 +499,7 @@ compute_lic (GimpDrawable *drawable,
              const guchar *scalarfield,
              gboolean      rotate)
 {
-  gint xcount, ycount, progress, max_progress, thread_id;
+  gint xcount, ycount, progress, max_progress;
   GimpRGB color;
   gdouble vx, vy, tmp;
   GimpPixelRgn src_rgn, dest_rgn;
@@ -513,16 +517,17 @@ compute_lic (GimpDrawable *drawable,
 progress = 0;
 max_progress = src_rgn.h * src_rgn.w;
 
-#pragma omp parallel num_threads(licvals.num_threads) default(none) \
-      private(ycount, xcount, vx, vy, tmp, thread_id, color) \
+#pragma omp parallel num_threads(licvals.num_threads) \
+      default(none) \
+      private(ycount, xcount, vx, vy, tmp, color) \
       reduction(+:progress) \
       shared(src_rgn, licvals, drawable, dest_rgn, max_progress, scalarfield, source_drw_has_alpha, rotate)
   {
 
+    int thread_id = omp_get_thread_num();
 #pragma omp for
     for (ycount = 0; ycount < src_rgn.h; ycount++)
       {
-        thread_id = omp_get_thread_num();
         for (xcount = 0; xcount < src_rgn.w; xcount++)
           {
             /* Get derivative at (x,y) and normalize it */
@@ -561,11 +566,11 @@ max_progress = src_rgn.h * src_rgn.w;
               }
             else
               {
-                printf("Thread %d called lic_image", thread_id);
-                #pragma omp critical
+                printf("Thread %d called lic_image\n", thread_id);
+                // #pragma omp critical
                   lic_image (&src_rgn, xcount, ycount, vx, vy, &color);
               }
-            printf("Thread %d called poke", thread_id);
+            printf("Thread %d called poke\n", thread_id);
             poke (&dest_rgn, xcount, ycount, &color);
             
             progress++;
@@ -581,12 +586,15 @@ max_progress = src_rgn.h * src_rgn.w;
 static void
 compute_image (GimpDrawable *drawable)
 {
+
+  printf("compute_image");
+
   /**********/
   /* Timing */
   /**********/
 #ifdef _OPENMP
       gfloat par_start, par_stop;
-      printf ("Started timing %s", PARALL_FUNCTIONS);
+      printf ("Started timing (%d Threads): %s", licvals.num_threads, PARALL_FUNCTIONS);
       par_start = omp_get_wtime();
 #endif
 
@@ -815,6 +823,19 @@ create_main_dialog (void)
                     G_CALLBACK (gimp_double_adjustment_update),
                     &licvals.maxv);
 
+  
+  // Slider for thread number
+  
+  scale_data = gimp_scale_entry_new (GTK_TABLE (table), 0, row++,
+                                    _("_Threads:"), 0, 6,
+                                    licvals.num_threads, 1, 72, 1, 4, 0,
+                                    TRUE, 1, 72,
+                                    _("Number of Threads to execute"), NULL);
+  g_signal_connect (scale_data, "value-changed",
+                    G_CALLBACK (gimp_int_adjustment_update),
+                    &licvals.num_threads);
+  
+
   gtk_widget_show (dialog);
 
   run = (gimp_dialog_run (GIMP_DIALOG (dialog)) == GTK_RESPONSE_OK);
@@ -822,6 +843,12 @@ create_main_dialog (void)
   gtk_widget_destroy (dialog);
 
   return run;
+}
+
+static void change(GtkAdjustment *adj, gpointer data)
+{
+  printf("changed value num_threads to: %f\n", *((gdouble*) data));
+  gimp_int_adjustment_update(adj, data);
 }
 
 /*************************************/
