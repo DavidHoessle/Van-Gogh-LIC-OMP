@@ -83,6 +83,7 @@ typedef struct
   gint     effect_operator;
   gint     effect_convolve;
   gint32   effect_image_id;
+  gint     num_threads;
 } LicValues;
 
 static LicValues licvals;
@@ -494,7 +495,7 @@ compute_lic (GimpDrawable *drawable,
              const guchar *scalarfield,
              gboolean      rotate)
 {
-  gint xcount, ycount;
+  gint xcount, ycount, progress, max_progress, thread_id;
   GimpRGB color;
   gdouble vx, vy, tmp;
   GimpPixelRgn src_rgn, dest_rgn;
@@ -509,53 +510,67 @@ compute_lic (GimpDrawable *drawable,
                        border_x2 - border_x1,
                        border_y2 - border_y1, TRUE, TRUE);
 
-  for (ycount = 0; ycount < src_rgn.h; ycount++)
-    {
-      for (xcount = 0; xcount < src_rgn.w; xcount++)
-        {
-          /* Get derivative at (x,y) and normalize it */
-          /* ============================================================== */
+progress = 0;
+max_progress = src_rgn.h * src_rgn.w;
 
-          vx = gradx (scalarfield, xcount, ycount);
-          vy = grady (scalarfield, xcount, ycount);
+#pragma omp parallel num_threads(licvals.num_threads) default(none) \
+      private(ycount, xcount, vx, vy, tmp, thread_id, progress, color) \
+      reduction(+:progress) \
+      shared(src_rgn,licvals,drawable,dest_rgn,preview, max_progress, scalarfield)
+  {
 
-          /* Rotate if needed */
-          if (rotate)
-            {
-              tmp = vy;
-              vy = -vx;
-              vx = tmp;
-            }
+#pragma omp for
+    for (ycount = 0; ycount < src_rgn.h; ycount++)
+      {
+        for (xcount = 0; xcount < src_rgn.w; xcount++)
+          {
+            /* Get derivative at (x,y) and normalize it */
+            /* ============================================================== */
 
-          tmp = sqrt (vx * vx + vy * vy);
-          if (tmp >= 0.000001)
-            {
-              tmp = 1.0 / tmp;
-              vx *= tmp;
-              vy *= tmp;
-            }
+            vx = gradx (scalarfield, xcount, ycount);
+            vy = grady (scalarfield, xcount, ycount);
 
-          /* Convolve with the LIC at (x,y) */
-          /* ============================== */
+            /* Rotate if needed */
+            if (rotate)
+              {
+                tmp = vy;
+                vy = -vx;
+                vx = tmp;
+              }
 
-          if (licvals.effect_convolve == 0)
-            {
-              peek (&src_rgn, xcount, ycount, &color);
-              tmp = lic_noise (xcount, ycount, vx, vy);
-              if (source_drw_has_alpha)
-                gimp_rgba_multiply (&color, tmp);
-              else
-                gimp_rgb_multiply (&color, tmp);
-            }
-          else
-            {
-              lic_image (&src_rgn, xcount, ycount, vx, vy, &color);
-            }
-          poke (&dest_rgn, xcount, ycount, &color);
-        }
+            tmp = sqrt (vx * vx + vy * vy);
+            if (tmp >= 0.000001)
+              {
+                tmp = 1.0 / tmp;
+                vx *= tmp;
+                vy *= tmp;
+              }
 
-      gimp_progress_update ((gfloat) ycount / (gfloat) src_rgn.h);
+            /* Convolve with the LIC at (x,y) */
+            /* ============================== */
+
+            if (licvals.effect_convolve == 0)
+              {
+                peek (&src_rgn, xcount, ycount, &color);
+                tmp = lic_noise (xcount, ycount, vx, vy);
+                if (source_drw_has_alpha)
+                  gimp_rgba_multiply (&color, tmp);
+                else
+                  gimp_rgb_multiply (&color, tmp);
+              }
+            else
+              {
+                lic_image (&src_rgn, xcount, ycount, vx, vy, &color);
+              }
+            poke (&dest_rgn, xcount, ycount, &color);
+            
+            progress++;
+          }
+
+      gimp_progress_update ((gfloat) progress / (gfloat) max_progress);
     }
+
+  } // end parallel
   gimp_progress_update (1.0);
 }
 
@@ -821,6 +836,7 @@ set_default_settings (void)
   licvals.effect_operator  = 1;
   licvals.effect_convolve  = 1;
   licvals.effect_image_id  = 0;
+  licvals.num_threads      = 4;
 }
 
 static void
