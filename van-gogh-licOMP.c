@@ -562,7 +562,8 @@ max_progress = src_rgn.h * src_rgn.w;
             else
               {
                 printf("Thread %d called lic_image", thread_id);
-                lic_image (&src_rgn, xcount, ycount, vx, vy, &color);
+                #pragma omp critical
+                  lic_image (&src_rgn, xcount, ycount, vx, vy, &color);
               }
             printf("Thread %d called poke", thread_id);
             poke (&dest_rgn, xcount, ycount, &color);
